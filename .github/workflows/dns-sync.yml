@@ -1,0 +1,88 @@
+name: DNS Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'zones/**'
+      - 'octodns.yaml'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no changes applied)'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  sync:
+    name: Sync DNS Records
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install OctoDNS
+        run: pip install -r requirements.txt
+
+      - name: Validate Configuration
+        run: octodns-validate --config=octodns.yaml
+
+      - name: Sync to Cloudflare
+        if: ${{ !inputs.dry_run }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          octodns-sync --config=octodns.yaml \
+            --target=cloudflare \
+            --doit
+
+      - name: Sync to deSEC
+        if: ${{ !inputs.dry_run }}
+        env:
+          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
+        run: |
+          octodns-sync --config=octodns.yaml \
+            --target=desec \
+            --doit
+
+      - name: Sync to Google Cloud DNS
+        if: ${{ !inputs.dry_run }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS" > /tmp/gcp-creds.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json
+          octodns-sync --config=octodns.yaml \
+            --target=google \
+            --doit
+
+      - name: Dry Run (Preview Changes)
+        if: ${{ inputs.dry_run }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
+        run: |
+          echo "## Dry Run - Preview Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          octodns-sync --config=octodns.yaml --doit=false 2>&1 | tee /tmp/changes.txt
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/changes.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary
+        if: ${{ !inputs.dry_run }}
+        run: |
+          echo "## DNS Sync Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Records synced to:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Cloudflare" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ deSEC" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Google Cloud DNS" >> $GITHUB_STEP_SUMMARY

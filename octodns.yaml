@@ -1,0 +1,38 @@
+---
+# OctoDNS Configuration - Multi-provider DNS sync
+# Keeps Cloudflare, deSEC, and Google Cloud DNS in sync
+
+providers:
+  # Source of truth - YAML zone files
+  yaml:
+    class: octodns.provider.yaml.YamlProvider
+    directory: ./zones
+    default_ttl: 300
+    enforce_order: true
+
+  # Cloudflare (Primary)
+  cloudflare:
+    class: octodns_cloudflare.CloudflareProvider
+    token: env/CLOUDFLARE_API_TOKEN
+    # Zone ID for alternatefutures.ai
+    # zone_id: ed2f933f7affeb1ae6435f5b4535742b
+
+  # deSEC (Secondary - free, privacy-focused)
+  desec:
+    class: octodns_desec.DesecProvider
+    token: env/DESEC_API_TOKEN
+
+  # Google Cloud DNS (Tertiary)
+  google:
+    class: octodns_googlecloud.GoogleCloudProvider
+    project: alternatefutures
+    credentials_file: env/GOOGLE_APPLICATION_CREDENTIALS
+
+zones:
+  alternatefutures.ai.:
+    sources:
+      - yaml
+    targets:
+      - cloudflare
+      - desec
+      - google
