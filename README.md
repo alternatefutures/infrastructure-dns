@@ -1,20 +1,20 @@
 # Infrastructure DNS
 
-Multi-provider DNS management for alternatefutures.ai with automatic failover monitoring.
+Multi-provider DNS management for alternatefutures.ai using OctoDNS.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    REGISTRAR (OpenProvider)                  │
-│        NS Records: cloudflare + ns1 (all active)            │
+│                    REGISTRAR (Namecheap)                     │
+│              NS: Cloudflare (primary, active)                │
 └─────────────────────────────────────────────────────────────┘
                               │
               ┌───────────────┴───────────────┐
               ▼                               ▼
         ┌──────────┐                    ┌──────────┐
-        │Cloudflare│                    │   NS1    │
-        │   Zone   │                    │   Zone   │
+        │Cloudflare│                    │  deSEC   │
+        │  (active)│                    │(standby) │
         └──────────┘                    └──────────┘
               │                               │
               └───────────────┬───────────────┘
@@ -27,19 +27,18 @@ Multi-provider DNS management for alternatefutures.ai with automatic failover mo
 
 ## Why Multi-Provider DNS?
 
-DNS outages happen. By using multiple providers with NS records from all of them, DNS resolvers automatically try alternates if one fails.
+If Cloudflare goes down, you can quickly switch to deSEC by changing NS at your registrar. Records are already synced and ready.
 
-| Outage Scenario | Impact |
-|-----------------|--------|
-| Cloudflare down | Site works (NS1 serves) |
-| NS1 down | Site works (Cloudflare serves) |
-| Both down | Site down (extremely unlikely) |
+| Provider | Status | Role |
+|----------|--------|------|
+| Cloudflare | Active (NS at registrar) | Primary, serving traffic |
+| deSEC | Standby (records synced) | Backup, ready to serve |
 
 ## Files
 
-- `octodns.yaml` - OctoDNS configuration
+- `octodns.yaml` - OctoDNS configuration (Cloudflare + deSEC)
 - `zones/alternatefutures.ai.yaml` - DNS records (source of truth)
-- `.github/workflows/dns-sync.yml` - Syncs records to all providers
+- `.github/workflows/dns-sync.yml` - Syncs records to all providers on push
 - `.github/workflows/dns-monitor.yml` - Monitors health every 5 minutes
 
 ## Usage
@@ -48,7 +47,7 @@ DNS outages happen. By using multiple providers with NS records from all of them
 
 1. Edit `zones/alternatefutures.ai.yaml`
 2. Push to main branch
-3. GitHub Actions syncs to all providers
+3. GitHub Actions syncs to both Cloudflare and deSEC
 
 ### Local Development
 
@@ -57,11 +56,11 @@ DNS outages happen. By using multiple providers with NS records from all of them
 pip install -r requirements.txt
 
 # Validate
+export CLOUDFLARE_API_TOKEN="..."
+export DESEC_API_TOKEN="..."
 octodns-validate --config=octodns.yaml
 
 # Dry run
-export CLOUDFLARE_API_TOKEN="..."
-export NS1_API_KEY="..."
 octodns-sync --config=octodns.yaml --doit=false
 
 # Apply
@@ -74,35 +73,43 @@ Set these in GitHub repository secrets:
 
 | Secret | Description |
 |--------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with DNS edit |
-| `NS1_API_KEY` | NS1 API key |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with Zone:DNS:Edit + Zone:Page Rules:Read |
+| `DESEC_API_TOKEN` | deSEC API token |
 
 ## Provider Setup
 
-### Cloudflare
-1. Already configured for alternatefutures.ai
-2. NS: `jeremy.ns.cloudflare.com`, `paisley.ns.cloudflare.com`
+### Cloudflare (Primary)
+- Zone: `alternatefutures.ai` (active)
+- NS: `jeremy.ns.cloudflare.com`, `miki.ns.cloudflare.com`
+- Token requires: Zone:Zone:Read, Zone:DNS:Edit, Zone:Page Rules:Read
 
-### NS1 (Free Tier - 500k queries/mo)
-1. Sign up at https://ns1.com/signup
-2. Add zone `alternatefutures.ai`
-3. Create API key: Account Settings → API Keys → Add Key
-4. NS: `dns1.p01.nsone.net`, `dns2.p01.nsone.net`, `dns3.p01.nsone.net`, `dns4.p01.nsone.net`
+### deSEC (Secondary - Free)
+- Zone: `alternatefutures.ai` (standby)
+- NS: `ns1.desec.io`, `ns2.desec.org`
+- Minimum TTL: 3600 seconds (1 hour)
+- Docs: https://desec.readthedocs.io/
+
+## Failover Procedure
+
+If Cloudflare is down:
+
+1. Log into Namecheap (registrar)
+2. Go to Domain → Nameservers
+3. Change NS to: `ns1.desec.io`, `ns2.desec.org`
+4. Wait for propagation (5-60 minutes)
+
+To switch back to Cloudflare:
+1. Change NS to: `jeremy.ns.cloudflare.com`, `miki.ns.cloudflare.com`
 
 ## Monitoring
 
 The `dns-monitor.yml` workflow runs every 5 minutes:
 - Queries each provider's nameserver directly
-- Creates GitHub issue if providers are down
+- Creates GitHub issue with `dns-alert` label if providers are down
 - Shows health status in workflow summary
 
-## ACME Challenge Delegation
+## Notes
 
-The `_acme-challenge.*` subdomains are delegated to Cloudflare via NS records.
-This means Let's Encrypt DNS-01 challenges always go to Cloudflare, regardless
-of which provider serves the main zone.
-
-If Cloudflare is down:
-- Site continues working (NS1 serves)
-- Certificate renewal fails (existing certs valid 90 days)
-- Once Cloudflare recovers, certs renew automatically
+- TTL is set to 3600 seconds to satisfy deSEC's minimum requirement
+- Zone file keys must be alphabetically sorted (`enforce_order: true`)
+- OctoDNS loads all providers at startup, so both tokens must be set even when targeting one provider
