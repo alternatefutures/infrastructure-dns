@@ -47,6 +47,20 @@ jobs:
           echo "Reading DNS records..."
           curl -s "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?per_page=5" \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq '{success, record_count: (.result | length), errors}'
+          echo ""
+          echo "Testing Python requests library..."
+          python3 << 'EOF'
+          import os
+          import requests
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          print(f"Python sees token length: {len(token)}")
+          resp = requests.get(
+              'https://api.cloudflare.com/client/v4/user/tokens/verify',
+              headers={'Authorization': f'Bearer {token}'}
+          )
+          print(f"Python request status: {resp.status_code}")
+          print(f"Python response: {resp.json()}")
+          EOF
 
       - name: Validate Configuration
         env:
