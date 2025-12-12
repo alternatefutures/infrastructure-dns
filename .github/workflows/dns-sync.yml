@@ -42,6 +42,7 @@ jobs:
         if: ${{ !inputs.dry_run }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
         run: |
           octodns-sync --config=octodns.yaml \
             --target=cloudflare \
@@ -50,6 +51,7 @@ jobs:
       - name: Sync to deSEC
         if: ${{ !inputs.dry_run }}
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
         run: |
           octodns-sync --config=octodns.yaml \
