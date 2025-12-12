@@ -14,6 +14,8 @@ providers:
   cloudflare:
     class: octodns_cloudflare.CloudflareProvider
     token: env/CLOUDFLARE_API_TOKEN
+    zone_ids:
+      alternatefutures.ai.: ed2f933f7affeb1ae6435f5b4535742b
 
   # deSEC (Secondary - free, privacy-focused)
   desec:
@@ -25,6 +27,5 @@ zones:
     sources:
       - yaml
     targets:
-      - cloudflare:
-          zone_id: ed2f933f7affeb1ae6435f5b4535742b
+      - cloudflare
       - desec
