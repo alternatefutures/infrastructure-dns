@@ -26,33 +26,33 @@ jobs:
             echo "Cloudflare OK: $RESULT"
           fi
 
-      - name: Check NS1 DNS
-        id: ns1
+      - name: Check deSEC DNS
+        id: desec
         continue-on-error: true
         run: |
-          # NS1 nameservers: dns1.p01.nsone.net, dns2.p01.nsone.net, etc.
-          RESULT=$(dig @dns1.p01.nsone.net alternatefutures.ai A +short +time=5 +tries=2 2>/dev/null || echo "TIMEOUT")
+          # deSEC nameservers: ns1.desec.io, ns2.desec.org
+          RESULT=$(dig @ns1.desec.io alternatefutures.ai A +short +time=5 +tries=2 2>/dev/null || echo "TIMEOUT")
           if [ -z "$RESULT" ] || [ "$RESULT" = "TIMEOUT" ]; then
             echo "status=down" >> $GITHUB_OUTPUT
-            echo "::warning::NS1 DNS is DOWN or not responding"
+            echo "::warning::deSEC DNS is DOWN or not responding"
           else
             echo "status=up" >> $GITHUB_OUTPUT
-            echo "NS1 OK: $RESULT"
+            echo "deSEC OK: $RESULT"
           fi
 
       - name: Evaluate Health
         id: health
         run: |
           CF="${{ steps.cloudflare.outputs.status }}"
-          NS="${{ steps.ns1.outputs.status }}"
+          DS="${{ steps.desec.outputs.status }}"
 
           UP_COUNT=0
           [ "$CF" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
-          [ "$NS" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
+          [ "$DS" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
 
           echo "up_count=$UP_COUNT" >> $GITHUB_OUTPUT
           echo "cloudflare=$CF" >> $GITHUB_OUTPUT
-          echo "ns1=$NS" >> $GITHUB_OUTPUT
+          echo "desec=$DS" >> $GITHUB_OUTPUT
 
           if [ $UP_COUNT -eq 0 ]; then
             echo "::error::CRITICAL: All DNS providers are DOWN!"
@@ -79,7 +79,7 @@ jobs:
             | Provider | Status |
             |----------|--------|
             | Cloudflare | ${process.env.CF} |
-            | NS1 | ${process.env.NS} |
+            | deSEC | ${process.env.DS} |
 
             **Action Required:** Check DNS provider dashboards and investigate.
             `;
@@ -105,7 +105,7 @@ jobs:
           SEVERITY: ${{ steps.health.outputs.severity }}
           UP_COUNT: ${{ steps.health.outputs.up_count }}
           CF: ${{ steps.health.outputs.cloudflare }}
-          NS: ${{ steps.health.outputs.ns1 }}
+          DS: ${{ steps.health.outputs.desec }}
 
       - name: Summary
         run: |
@@ -114,6 +114,6 @@ jobs:
           echo "| Provider | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Cloudflare | ${{ steps.health.outputs.cloudflare }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| NS1 | ${{ steps.health.outputs.ns1 }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| deSEC | ${{ steps.health.outputs.desec }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Overall:** ${{ steps.health.outputs.up_count }}/2 providers healthy" >> $GITHUB_STEP_SUMMARY

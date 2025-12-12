@@ -1,4 +1,4 @@
 # OctoDNS and provider plugins
 octodns>=1.0.0
 octodns-cloudflare>=0.0.1
-octodns-ns1>=0.0.1
+octodns-desec>=0.0.1

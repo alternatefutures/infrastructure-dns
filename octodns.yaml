@@ -1,6 +1,6 @@
 ---
 # OctoDNS Configuration - Multi-provider DNS sync
-# Keeps Cloudflare and NS1 in sync for resilience
+# Keeps Cloudflare and deSEC in sync for resilience
 
 providers:
   # Source of truth - YAML zone files
@@ -15,16 +15,10 @@ providers:
     class: octodns_cloudflare.CloudflareProvider
     token: env/CLOUDFLARE_API_TOKEN
 
-  # NS1 (Secondary - free tier 500k queries/mo)
-  ns1:
-    class: octodns_ns1.Ns1Provider
-    api_key: env/NS1_API_KEY
-
-  # Google Cloud DNS (Optional - requires GCP account)
-  # google:
-  #   class: octodns_googlecloud.GoogleCloudProvider
-  #   project: alternatefutures
-  #   credentials_file: env/GOOGLE_APPLICATION_CREDENTIALS
+  # deSEC (Secondary - free, privacy-focused)
+  desec:
+    class: octodns_desec.DesecProvider
+    token: env/DESEC_API_TOKEN
 
 zones:
   alternatefutures.ai.:
@@ -32,4 +26,4 @@ zones:
       - yaml
     targets:
       - cloudflare
-      - ns1
+      - desec

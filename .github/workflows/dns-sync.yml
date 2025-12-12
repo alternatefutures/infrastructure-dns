@@ -44,20 +44,20 @@ jobs:
             --target=cloudflare \
             --doit
 
-      - name: Sync to NS1
+      - name: Sync to deSEC
         if: ${{ !inputs.dry_run }}
         env:
-          NS1_API_KEY: ${{ secrets.NS1_API_KEY }}
+          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
         run: |
           octodns-sync --config=octodns.yaml \
-            --target=ns1 \
+            --target=desec \
             --doit
 
       - name: Dry Run (Preview Changes)
         if: ${{ inputs.dry_run }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          NS1_API_KEY: ${{ secrets.NS1_API_KEY }}
+          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
         run: |
           echo "## Dry Run - Preview Changes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -73,4 +73,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Records synced to:" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Cloudflare" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ NS1" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ deSEC" >> $GITHUB_STEP_SUMMARY
