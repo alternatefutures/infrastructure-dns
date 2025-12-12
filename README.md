@@ -7,17 +7,17 @@ Multi-provider DNS management for alternatefutures.ai with automatic failover mo
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    REGISTRAR (OpenProvider)                  │
-│  NS Records: cloudflare + desec + google (all active)       │
+│        NS Records: cloudflare + ns1 (all active)            │
 └─────────────────────────────────────────────────────────────┘
                               │
-         ┌────────────────────┼────────────────────┐
-         ▼                    ▼                    ▼
-   ┌──────────┐         ┌──────────┐         ┌──────────┐
-   │Cloudflare│         │  deSEC   │         │Google DNS│
-   │   Zone   │         │   Zone   │         │   Zone   │
-   └──────────┘         └──────────┘         └──────────┘
-         │                    │                    │
-         └────────────────────┴────────────────────┘
+              ┌───────────────┴───────────────┐
+              ▼                               ▼
+        ┌──────────┐                    ┌──────────┐
+        │Cloudflare│                    │   NS1    │
+        │   Zone   │                    │   Zone   │
+        └──────────┘                    └──────────┘
+              │                               │
+              └───────────────┬───────────────┘
                               │
                     ┌─────────┴─────────┐
                     │     OctoDNS       │
@@ -31,11 +31,9 @@ DNS outages happen. By using multiple providers with NS records from all of them
 
 | Outage Scenario | Impact |
 |-----------------|--------|
-| Cloudflare down | Site works (deSEC/Google serve) |
-| deSEC down | Site works (Cloudflare/Google serve) |
-| Google down | Site works (Cloudflare/deSEC serve) |
-| 2 providers down | Site works (1 provider serves) |
-| All 3 down | Site down (extremely unlikely) |
+| Cloudflare down | Site works (NS1 serves) |
+| NS1 down | Site works (Cloudflare serves) |
+| Both down | Site down (extremely unlikely) |
 
 ## Files
 
@@ -63,7 +61,7 @@ octodns-validate --config=octodns.yaml
 
 # Dry run
 export CLOUDFLARE_API_TOKEN="..."
-export DESEC_API_TOKEN="..."
+export NS1_API_KEY="..."
 octodns-sync --config=octodns.yaml --doit=false
 
 # Apply
@@ -77,8 +75,19 @@ Set these in GitHub repository secrets:
 | Secret | Description |
 |--------|-------------|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API token with DNS edit |
-| `DESEC_API_TOKEN` | deSEC API token |
-| `GOOGLE_CREDENTIALS_JSON` | GCP service account JSON |
+| `NS1_API_KEY` | NS1 API key |
+
+## Provider Setup
+
+### Cloudflare
+1. Already configured for alternatefutures.ai
+2. NS: `jeremy.ns.cloudflare.com`, `paisley.ns.cloudflare.com`
+
+### NS1 (Free Tier - 500k queries/mo)
+1. Sign up at https://ns1.com/signup
+2. Add zone `alternatefutures.ai`
+3. Create API key: Account Settings → API Keys → Add Key
+4. NS: `dns1.p01.nsone.net`, `dns2.p01.nsone.net`, `dns3.p01.nsone.net`, `dns4.p01.nsone.net`
 
 ## Monitoring
 
@@ -94,6 +103,6 @@ This means Let's Encrypt DNS-01 challenges always go to Cloudflare, regardless
 of which provider serves the main zone.
 
 If Cloudflare is down:
-- Site continues working (other providers serve)
+- Site continues working (NS1 serves)
 - Certificate renewal fails (existing certs valid 90 days)
 - Once Cloudflare recovers, certs renew automatically

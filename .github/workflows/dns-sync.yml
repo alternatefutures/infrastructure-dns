@@ -44,31 +44,20 @@ jobs:
             --target=cloudflare \
             --doit
 
-      - name: Sync to deSEC
+      - name: Sync to NS1
         if: ${{ !inputs.dry_run }}
         env:
-          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
+          NS1_API_KEY: ${{ secrets.NS1_API_KEY }}
         run: |
           octodns-sync --config=octodns.yaml \
-            --target=desec \
-            --doit
-
-      - name: Sync to Google Cloud DNS
-        if: ${{ !inputs.dry_run }}
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: |
-          echo "$GOOGLE_APPLICATION_CREDENTIALS" > /tmp/gcp-creds.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json
-          octodns-sync --config=octodns.yaml \
-            --target=google \
+            --target=ns1 \
             --doit
 
       - name: Dry Run (Preview Changes)
         if: ${{ inputs.dry_run }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          DESEC_API_TOKEN: ${{ secrets.DESEC_API_TOKEN }}
+          NS1_API_KEY: ${{ secrets.NS1_API_KEY }}
         run: |
           echo "## Dry Run - Preview Changes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -84,5 +73,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Records synced to:" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Cloudflare" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ deSEC" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Google Cloud DNS" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ NS1" >> $GITHUB_STEP_SUMMARY

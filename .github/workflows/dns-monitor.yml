@@ -26,48 +26,33 @@ jobs:
             echo "Cloudflare OK: $RESULT"
           fi
 
-      - name: Check deSEC DNS
-        id: desec
+      - name: Check NS1 DNS
+        id: ns1
         continue-on-error: true
         run: |
-          RESULT=$(dig @ns1.desec.io alternatefutures.ai A +short +time=5 +tries=2 2>/dev/null || echo "TIMEOUT")
+          # NS1 nameservers: dns1.p01.nsone.net, dns2.p01.nsone.net, etc.
+          RESULT=$(dig @dns1.p01.nsone.net alternatefutures.ai A +short +time=5 +tries=2 2>/dev/null || echo "TIMEOUT")
           if [ -z "$RESULT" ] || [ "$RESULT" = "TIMEOUT" ]; then
             echo "status=down" >> $GITHUB_OUTPUT
-            echo "::warning::deSEC DNS is DOWN or not responding"
+            echo "::warning::NS1 DNS is DOWN or not responding"
           else
             echo "status=up" >> $GITHUB_OUTPUT
-            echo "deSEC OK: $RESULT"
-          fi
-
-      - name: Check Google DNS
-        id: google
-        continue-on-error: true
-        run: |
-          RESULT=$(dig @ns-cloud-a1.googledomains.com alternatefutures.ai A +short +time=5 +tries=2 2>/dev/null || echo "TIMEOUT")
-          if [ -z "$RESULT" ] || [ "$RESULT" = "TIMEOUT" ]; then
-            echo "status=down" >> $GITHUB_OUTPUT
-            echo "::warning::Google DNS is DOWN or not responding"
-          else
-            echo "status=up" >> $GITHUB_OUTPUT
-            echo "Google OK: $RESULT"
+            echo "NS1 OK: $RESULT"
           fi
 
       - name: Evaluate Health
         id: health
         run: |
           CF="${{ steps.cloudflare.outputs.status }}"
-          DS="${{ steps.desec.outputs.status }}"
-          GG="${{ steps.google.outputs.status }}"
+          NS="${{ steps.ns1.outputs.status }}"
 
           UP_COUNT=0
           [ "$CF" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
-          [ "$DS" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
-          [ "$GG" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
+          [ "$NS" = "up" ] && UP_COUNT=$((UP_COUNT + 1))
 
           echo "up_count=$UP_COUNT" >> $GITHUB_OUTPUT
           echo "cloudflare=$CF" >> $GITHUB_OUTPUT
-          echo "desec=$DS" >> $GITHUB_OUTPUT
-          echo "google=$GG" >> $GITHUB_OUTPUT
+          echo "ns1=$NS" >> $GITHUB_OUTPUT
 
           if [ $UP_COUNT -eq 0 ]; then
             echo "::error::CRITICAL: All DNS providers are DOWN!"
@@ -75,9 +60,6 @@ jobs:
           elif [ $UP_COUNT -eq 1 ]; then
             echo "::warning::WARNING: Only 1 DNS provider is up"
             echo "severity=warning" >> $GITHUB_OUTPUT
-          elif [ $UP_COUNT -eq 2 ]; then
-            echo "::notice::DEGRADED: 1 DNS provider is down"
-            echo "severity=degraded" >> $GITHUB_OUTPUT
           else
             echo "All DNS providers healthy"
             echo "severity=ok" >> $GITHUB_OUTPUT
@@ -88,7 +70,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const title = `DNS Alert: ${process.env.SEVERITY} - ${process.env.UP_COUNT}/3 providers up`;
+            const title = `DNS Alert: ${process.env.SEVERITY} - ${process.env.UP_COUNT}/2 providers up`;
             const body = `## DNS Health Alert
 
             **Severity:** ${process.env.SEVERITY}
@@ -97,8 +79,7 @@ jobs:
             | Provider | Status |
             |----------|--------|
             | Cloudflare | ${process.env.CF} |
-            | deSEC | ${process.env.DS} |
-            | Google | ${process.env.GG} |
+            | NS1 | ${process.env.NS} |
 
             **Action Required:** Check DNS provider dashboards and investigate.
             `;
@@ -124,8 +105,7 @@ jobs:
           SEVERITY: ${{ steps.health.outputs.severity }}
           UP_COUNT: ${{ steps.health.outputs.up_count }}
           CF: ${{ steps.health.outputs.cloudflare }}
-          DS: ${{ steps.health.outputs.desec }}
-          GG: ${{ steps.health.outputs.google }}
+          NS: ${{ steps.health.outputs.ns1 }}
 
       - name: Summary
         run: |
@@ -134,7 +114,6 @@ jobs:
           echo "| Provider | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Cloudflare | ${{ steps.health.outputs.cloudflare }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| deSEC | ${{ steps.health.outputs.desec }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Google | ${{ steps.health.outputs.google }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NS1 | ${{ steps.health.outputs.ns1 }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Overall:** ${{ steps.health.outputs.up_count }}/3 providers healthy" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall:** ${{ steps.health.outputs.up_count }}/2 providers healthy" >> $GITHUB_STEP_SUMMARY
