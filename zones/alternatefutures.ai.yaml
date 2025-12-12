@@ -1,46 +1,32 @@
 ---
 # DNS Zone: alternatefutures.ai
-# Managed by OctoDNS - synced to Cloudflare and NS1
+# Managed by OctoDNS - synced to Cloudflare and deSEC
 #
 # IMPORTANT: Edit this file, then run OctoDNS to sync changes to all providers.
 # Do NOT edit records directly in provider dashboards.
+# NOTE: Keys must be in alphabetical order (enforce_order: true)
 
-# Root domain - A, MX, and TXT records defined at end of file
+# Root domain (@ record) - A, MX, and TXT records
+'':
+  - type: A
+    values:
+      - 65.108.134.119
+  - type: MX
+    values:
+      - priority: 1
+        value: ASPMX.L.GOOGLE.COM.
+      - priority: 5
+        value: ALT1.ASPMX.L.GOOGLE.COM.
+      - priority: 5
+        value: ALT2.ASPMX.L.GOOGLE.COM.
+      - priority: 10
+        value: ALT3.ASPMX.L.GOOGLE.COM.
+      - priority: 10
+        value: ALT4.ASPMX.L.GOOGLE.COM.
+  - type: TXT
+    value: "v=spf1 include:_spf.google.com ~all"
 
-# WWW redirect
-www:
-  type: CNAME
-  value: alternatefutures.ai.
-
-# Application subdomains - point to Akash SSL proxy
-api:
-  type: A
-  value: 65.108.134.119
-
-app:
-  type: A
-  value: 65.108.134.119
-
-auth:
-  type: A
-  value: 65.108.134.119
-
-docs:
-  type: A
-  value: 65.108.134.119
-
-# Service endpoints (internal/future use)
-graphql.service:
-  type: A
-  value: 65.108.134.119
-
-auth.service:
-  type: A
-  value: 65.108.134.119
-
-# ACME Challenge Delegation
-# Delegate _acme-challenge to Cloudflare for Let's Encrypt DNS-01
-# This allows cert issuance even if main DNS is on another provider
+# ACME Challenge Delegation - for Let's Encrypt DNS-01
 _acme-challenge:
   type: NS
   values:
@@ -65,22 +51,32 @@ _acme-challenge.auth:
     - jeremy.ns.cloudflare.com.
     - miki.ns.cloudflare.com.
 
-# Google Workspace Email
-'':
-  - type: A
-    values:
-      - 65.108.134.119
-  - type: MX
-    values:
-      - priority: 1
-        value: ASPMX.L.GOOGLE.COM.
-      - priority: 5
-        value: ALT1.ASPMX.L.GOOGLE.COM.
-      - priority: 5
-        value: ALT2.ASPMX.L.GOOGLE.COM.
-      - priority: 10
-        value: ALT3.ASPMX.L.GOOGLE.COM.
-      - priority: 10
-        value: ALT4.ASPMX.L.GOOGLE.COM.
-  - type: TXT
-    value: "v=spf1 include:_spf.google.com ~all"
+# Application subdomains - point to Akash SSL proxy
+api:
+  type: A
+  value: 65.108.134.119
+
+app:
+  type: A
+  value: 65.108.134.119
+
+auth:
+  type: A
+  value: 65.108.134.119
+
+auth.service:
+  type: A
+  value: 65.108.134.119
+
+docs:
+  type: A
+  value: 65.108.134.119
+
+graphql.service:
+  type: A
+  value: 65.108.134.119
+
+# WWW redirect
+www:
+  type: CNAME
+  value: alternatefutures.ai.
