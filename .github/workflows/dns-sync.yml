@@ -41,8 +41,12 @@ jobs:
           curl -s "https://api.cloudflare.com/client/v4/user/tokens/verify" \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq .
           echo "Listing zones..."
-          curl -s "https://api.cloudflare.com/client/v4/zones?name=alternatefutures.ai" \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq '{success, zone_id: .result[0].id}'
+          ZONE_ID=$(curl -s "https://api.cloudflare.com/client/v4/zones?name=alternatefutures.ai" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq -r '.result[0].id')
+          echo "Zone ID: $ZONE_ID"
+          echo "Reading DNS records..."
+          curl -s "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?per_page=5" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq '{success, record_count: (.result | length), errors}'
 
       - name: Validate Configuration
         env:
