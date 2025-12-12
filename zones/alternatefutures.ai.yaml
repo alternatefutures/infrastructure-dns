@@ -26,31 +26,6 @@
   - type: TXT
     value: "v=spf1 include:_spf.google.com ~all"
 
-# ACME Challenge Delegation - for Let's Encrypt DNS-01
-_acme-challenge:
-  type: NS
-  values:
-    - jeremy.ns.cloudflare.com.
-    - miki.ns.cloudflare.com.
-
-_acme-challenge.api:
-  type: NS
-  values:
-    - jeremy.ns.cloudflare.com.
-    - miki.ns.cloudflare.com.
-
-_acme-challenge.app:
-  type: NS
-  values:
-    - jeremy.ns.cloudflare.com.
-    - miki.ns.cloudflare.com.
-
-_acme-challenge.auth:
-  type: NS
-  values:
-    - jeremy.ns.cloudflare.com.
-    - miki.ns.cloudflare.com.
-
 # Application subdomains - point to Akash SSL proxy
 api:
   type: A
