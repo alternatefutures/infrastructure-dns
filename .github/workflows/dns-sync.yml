@@ -76,6 +76,7 @@ jobs:
         run: |
           octodns-sync --config=octodns.yaml \
             --target=cloudflare \
+            --force \
             --doit
 
       - name: Sync to deSEC
@@ -86,6 +87,7 @@ jobs:
         run: |
           octodns-sync --config=octodns.yaml \
             --target=desec \
+            --force \
             --doit
 
       - name: Dry Run (Preview Changes)
