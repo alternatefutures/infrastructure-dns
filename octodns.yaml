@@ -25,5 +25,6 @@ zones:
     sources:
       - yaml
     targets:
-      - cloudflare
+      - cloudflare:
+          zone_id: ed2f933f7affeb1ae6435f5b4535742b
       - desec
