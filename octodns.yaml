@@ -7,7 +7,7 @@ providers:
   yaml:
     class: octodns.provider.yaml.YamlProvider
     directory: ./zones
-    default_ttl: 300
+    default_ttl: 3600  # deSEC requires minimum 3600
     enforce_order: true
 
   # Cloudflare (Primary)
