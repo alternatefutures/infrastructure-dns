@@ -1,16 +1,11 @@
 ---
 # DNS Zone: alternatefutures.ai
-# Managed by OctoDNS - synced to Cloudflare, deSEC, Google Cloud DNS
+# Managed by OctoDNS - synced to Cloudflare and NS1
 #
 # IMPORTANT: Edit this file, then run OctoDNS to sync changes to all providers.
 # Do NOT edit records directly in provider dashboards.
 
-# Root domain
-'':
-  type: A
-  values:
-    # Akash provider ingress (update when deployment changes)
-    - 65.108.134.119
+# Root domain - A, MX, and TXT records defined at end of file
 
 # WWW redirect
 www:
@@ -70,14 +65,22 @@ _acme-challenge.auth:
     - jeremy.ns.cloudflare.com.
     - miki.ns.cloudflare.com.
 
-# Email (if needed)
-# mail:
-#   type: MX
-#   values:
-#     - priority: 10
-#       value: mail.alternatefutures.ai.
-
-# SPF record for email
-# '':
-#   type: TXT
-#   value: "v=spf1 -all"
+# Google Workspace Email
+'':
+  - type: A
+    values:
+      - 65.108.134.119
+  - type: MX
+    values:
+      - priority: 1
+        value: ASPMX.L.GOOGLE.COM.
+      - priority: 5
+        value: ALT1.ASPMX.L.GOOGLE.COM.
+      - priority: 5
+        value: ALT2.ASPMX.L.GOOGLE.COM.
+      - priority: 10
+        value: ALT3.ASPMX.L.GOOGLE.COM.
+      - priority: 10
+        value: ALT4.ASPMX.L.GOOGLE.COM.
+  - type: TXT
+    value: "v=spf1 include:_spf.google.com ~all"
