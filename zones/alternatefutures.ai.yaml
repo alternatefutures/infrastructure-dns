@@ -51,6 +51,11 @@ graphql.service:
   type: A
   value: 65.108.134.119
 
+# E-signature platform (DocuSeal on Akash)
+sign:
+  type: CNAME
+  value: rgucnt2ap9c397uu1ef9uh5gss.ingress.boogle.cloud.
+
 # WWW redirect
 www:
   type: CNAME
