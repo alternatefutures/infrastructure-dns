@@ -26,6 +26,15 @@
   - type: TXT
     value: "v=spf1 include:_spf.google.com ~all"
 
+# Pitch deck DNSLink (legacy IPFS — now served via GitHub Pages)
+# _dnslink.deck:
+#   - type: TXT
+#     value: "dnslink=/ipfs/bafybeihjvnr6qlkhk6bzsesb7dumhmm2io2hlnz7kv3chzzax3vm6eke4a"
+
+_dnslink.investor:
+  - type: TXT
+    value: "dnslink=/ipfs/bafybeial7d427crhli7erb6grt5v6o2gdo5w4tbrztyvqw7i5cpfqpowmu"
+
 # Application subdomains - point to Akash SSL proxy
 api:
   type: A
@@ -43,6 +52,11 @@ auth.service:
   type: A
   value: 65.108.134.119
 
+# Pitch deck — GitHub Pages (alternatefutures/pitch-deck)
+deck:
+  type: CNAME
+  value: alternatefutures.github.io.
+
 docs:
   type: A
   value: 65.108.134.119
@@ -50,6 +64,11 @@ docs:
 graphql.service:
   type: A
   value: 65.108.134.119
+
+# Investor portal (IPFS via Cloudflare gateway + DNSLink)
+investor:
+  type: CNAME
+  value: cloudflare-ipfs.com.
 
 # E-signature platform (DocuSeal on Akash)
 sign:
