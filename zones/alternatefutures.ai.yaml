@@ -31,9 +31,7 @@
 #   - type: TXT
 #     value: "dnslink=/ipfs/bafybeihjvnr6qlkhk6bzsesb7dumhmm2io2hlnz7kv3chzzax3vm6eke4a"
 
-_dnslink.investor:
-  - type: TXT
-    value: "dnslink=/ipfs/bafybeial7d427crhli7erb6grt5v6o2gdo5w4tbrztyvqw7i5cpfqpowmu"
+# _dnslink.investor removed — portal now served from Akash, not IPFS
 
 # Application subdomains - point to Akash SSL proxy
 api:
@@ -65,10 +63,10 @@ graphql.service:
   type: A
   value: 65.108.134.119
 
-# Investor portal (IPFS via Cloudflare gateway + DNSLink)
+# Investor portal (Akash via AF platform, DSEQ 27263501)
 investor:
   type: CNAME
-  value: cloudflare-ipfs.com.
+  value: mlvhhk7jghbhba7s1ehpq7vrdg.ingress.hurricane.akash.pub.
 
 # E-signature platform (DocuSeal on Akash)
 sign:
