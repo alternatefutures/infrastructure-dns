@@ -63,10 +63,10 @@ graphql.service:
   type: A
   value: 65.108.134.119
 
-# Investor portal (Akash via AF platform, DSEQ 27263501)
+# Investor portal — Vercel (password-gated, noindex)
 investor:
   type: CNAME
-  value: r7o8qia9gtb1d7vof02vr222b0.ingress.hurricane.akash.pub.
+  value: b545f3c5dc9f4ff3.vercel-dns-016.com.
 
 # Secrets / Infisical — SES sending records (DKIM + SPF/MX)
 # These were added directly in Cloudflare for Infisical email notifications
